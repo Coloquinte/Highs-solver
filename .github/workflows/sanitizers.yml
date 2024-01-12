@@ -1,0 +1,118 @@
+name: Test with sanitizers
+on: [workflow_dispatch]
+
+jobs:
+  asan:
+    name: Address sanitizer
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: "recursive"
+          fetch-depth: 0
+      - name: Install Conda environment
+        uses: mamba-org/setup-micromamba@v1
+        with:
+          environment-name: highsdev
+          create-args: >-
+            python==3.8
+            meson
+            pkgconfig
+            ninja
+            zlib
+            catch2
+            numpy
+          cache-environment: true
+          init-shell: >-
+            bash
+            zsh
+      - name: Build and test
+        shell: bash -l {0}
+        run: |
+          meson setup build_asan -Duse_zlib=enabled -Dwith_tests=True -Db_sanitize=address
+          meson test -C build_asan -t 2  # Time x2 for the tests
+      - name: Upload log
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: log_asan.txt
+          path: build_asan/meson-logs/testlog.txt
+  ubsan:
+    name: Undefined behaviour sanitizer
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: "recursive"
+          fetch-depth: 0
+      - name: Install Conda environment
+        uses: mamba-org/setup-micromamba@v1
+        with:
+          environment-name: highsdev
+          create-args: >-
+            python==3.8
+            meson
+            pkgconfig
+            ninja
+            zlib
+            catch2
+            numpy
+          cache-environment: true
+          init-shell: >-
+            bash
+            zsh
+      - name: Build and test
+        shell: bash -l {0}
+        run: |
+          meson setup build_ubsan -Duse_zlib=enabled -Dwith_tests=True -Db_sanitize=undefined
+          meson test -C build_ubsan -t 2  # Time x2 for the tests
+      - name: Upload log
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: log_ubsan.txt
+          path: build_ubsan/meson-logs/testlog.txt
+  tsan:
+    name: Thread sanitizer
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: "recursive"
+          fetch-depth: 0
+      - name: Install Conda environment
+        uses: mamba-org/setup-micromamba@v1
+        with:
+          environment-name: highsdev
+          create-args: >-
+            python==3.8
+            meson
+            pkgconfig
+            ninja
+            zlib
+            catch2
+            numpy
+          cache-environment: true
+          init-shell: >-
+            bash
+            zsh
+      - name: Build and test
+        shell: bash -l {0}
+        run: |
+          meson setup build_tsan -Duse_zlib=enabled -Dwith_tests=True -Db_sanitize=thread
+          meson test -C build_tsan -t 10  # Time x10 for the tests
+      - name: Upload log
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: log_tsan.txt
+          path: build_tsan/meson-logs/testlog.txt
