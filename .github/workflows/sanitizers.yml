@@ -1,5 +1,5 @@
 name: Test with sanitizers
-on: [workflow_dispatch]
+on: [push, workflow_dispatch]
 
 jobs:
   asan:
@@ -7,7 +7,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest]
+        os: [ubuntu-latest, macos-latest]
     steps:
       - uses: actions/checkout@v3
         with:
@@ -38,14 +38,14 @@ jobs:
         uses: actions/upload-artifact@v3
         if: always()
         with:
-          name: log_asan.txt
+          name: log_asan_${{ matrix.os }}.txt
           path: build_asan/meson-logs/testlog.txt
   ubsan:
     name: Undefined behaviour sanitizer
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest]
+        os: [ubuntu-latest, macos-latest]
     steps:
       - uses: actions/checkout@v3
         with:
@@ -76,14 +76,14 @@ jobs:
         uses: actions/upload-artifact@v3
         if: always()
         with:
-          name: log_ubsan.txt
+          name: log_ubsan_${{ matrix.os }}.txt
           path: build_ubsan/meson-logs/testlog.txt
   tsan:
     name: Thread sanitizer
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest]
+        os: [ubuntu-latest, macos-latest]
     steps:
       - uses: actions/checkout@v3
         with:
@@ -114,5 +114,5 @@ jobs:
         uses: actions/upload-artifact@v3
         if: always()
         with:
-          name: log_tsan.txt
+          name: log_tsan_${{ matrix.os }}.txt
           path: build_tsan/meson-logs/testlog.txt
