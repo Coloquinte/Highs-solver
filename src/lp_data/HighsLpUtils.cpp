@@ -58,7 +58,7 @@ HighsStatus assessLp(HighsLp& lp, const HighsOptions& options) {
     // Assess the LP column bounds
     call_status = assessBounds(options, "Col", 0, index_collection,
                                lp.col_lower_, lp.col_upper_,
-                               options.infinite_bound, lp.integrality_.data());
+                               options.infinite_bound, lp.integrality_.data(), lp.integrality_.data() == nullptr ? nullptr : lp.integrality_.data() + lp.integrality_.size());
     return_status = interpretCallStatus(options.log_options, call_status,
                                         return_status, "assessBounds");
     if (return_status == HighsStatus::kError) return return_status;
@@ -344,7 +344,7 @@ HighsStatus assessBounds(const HighsOptions& options, const char* type,
                          const HighsIndexCollection& index_collection,
                          vector<double>& lower, vector<double>& upper,
                          const double infinite_bound,
-                         const HighsVarType* integrality) {
+                         const HighsVarType* integrality, const HighsVarType* integrality_end) {
   HighsStatus return_status = HighsStatus::kOk;
   assert(ok(index_collection));
   HighsInt from_k;
@@ -416,6 +416,8 @@ HighsStatus assessBounds(const HighsOptions& options, const char* type,
     // Check that the lower bound does not exceed the upper bound
     bool legalLowerUpperBound = lower[usr_ix] <= upper[usr_ix];
     if (integrality) {
+      assert(usr_ix >= 0);
+      assert(usr_ix < integrality_end - integrality);
       // Legal for semi-variables to have inconsistent bounds
       if (integrality[usr_ix] == HighsVarType::kSemiContinuous ||
           integrality[usr_ix] == HighsVarType::kSemiInteger)
