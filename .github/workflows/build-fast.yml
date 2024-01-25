@@ -11,7 +11,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v2
+
+      - name: Setup ccache
+        uses: hendrikmuhs/ccache-action@v1.2
 
       - name: Create Build Environment
         run: cmake -E make_directory ${{runner.workspace}}/build
@@ -19,7 +21,7 @@ jobs:
       - name: Configure CMake
         shell: bash
         working-directory: ${{runner.workspace}}/build
-        run: cmake -DFAST_BUILD=ON -DEXP=ON $GITHUB_WORKSPACE
+        run: cmake -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DFAST_BUILD=ON -DEXP=ON $GITHUB_WORKSPACE
 
       - name: Build
         working-directory: ${{runner.workspace}}/build
@@ -41,7 +43,7 @@ jobs:
       - name: Install
         run: |
           cmake -E make_directory ${{runner.workspace}}/install \
-          cmake -DFAST_BUILD=ON -DCMAKE_INSTALL_PREFIX=${{runner.workspace}}/install $GITHUB_WORKSPACE \
+          cmake -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DFAST_BUILD=ON -DCMAKE_INSTALL_PREFIX=${{runner.workspace}}/install $GITHUB_WORKSPACE \
           cmake --build . --parallel \
           cmake --install . \
 
@@ -54,13 +56,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Setup ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+
       - name: Create Build Environment
         run: cmake -E make_directory ${{runner.workspace}}/build
 
       - name: Configure CMake
         shell: bash
         working-directory: ${{runner.workspace}}/build
-        run: cmake $GITHUB_WORKSPACE -DFAST_BUILD=ON -DCMAKE_BUILD_TYPE=DEBUG
+        run: cmake $GITHUB_WORKSPACE -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DFAST_BUILD=ON -DCMAKE_BUILD_TYPE=DEBUG
 
       - name: Build
         working-directory: ${{runner.workspace}}/build
