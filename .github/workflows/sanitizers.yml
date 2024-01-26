@@ -16,6 +16,8 @@ jobs:
           fetch-depth: 0
       - name: Setup ccache
         uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ github.job }}-${{ matrix.os }}-${{ matrix.sanitizer }}
       - name: Install Conda environment
         uses: mamba-org/setup-micromamba@v1
         with:

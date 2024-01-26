@@ -3,17 +3,22 @@ name: build-clang
 on: [push, pull_request]
 
 jobs:
-  debug:
+  build-clang:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-latest]
+        build-type: [Release, Debug]
+        int64: [ON, OFF]
+        fast-build: [OFF]
 
     steps:
       - uses: actions/checkout@v4
 
       - name: Setup ccache
         uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ github.job }}-${{ matrix.os }}-${{ matrix.build-type }}-${{ matrix.fast-build}}-${{ matrix.int64 }}
 
       - name: Create Build Environment
         run: cmake -E make_directory ${{runner.workspace}}/build
@@ -21,7 +26,10 @@ jobs:
       - name: Configure CMake
         shell: bash
         working-directory: ${{runner.workspace}}/build
-        run: cmake $GITHUB_WORKSPACE -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_BUILD_TYPE=Debug -DFAST_BUILD=OFF
+        run: |
+          cmake $GITHUB_WORKSPACE \
+            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+            -DCMAKE_BUILD_TYPE=${{ matrix.build-type }} -DFAST_BUILD=${{ matrix.fast-build }} -DHIGHSINT64=${{ matrix.int64 }}
 
       - name: Build
         working-directory: ${{runner.workspace}}/build
@@ -30,119 +38,11 @@ jobs:
         run: |
           export CC=clang
           export CC=clang++
-          cmake --build . --parallel --config Debug
+          cmake --build . --parallel --config ${{ matrix.build-type }}
 
       - name: Test
         working-directory: ${{runner.workspace}}/build
         shell: bash
         # Execute tests defined by the CMake configuration.
         # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
-        run: ctest --parallel 2 --timeout 300 --output-on-failure -C $BUILD_TYPE
-
-  release:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest]
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup ccache
-        uses: hendrikmuhs/ccache-action@v1.2
-
-      - name: Create Build Environment
-        run: cmake -E make_directory ${{runner.workspace}}/build
-
-      - name: Configure CMake
-        shell: bash
-        working-directory: ${{runner.workspace}}/build
-        run: cmake $GITHUB_WORKSPACE -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_BUILD_TYPE=RELEASE
-
-      - name: Build
-        working-directory: ${{runner.workspace}}/build
-        shell: bash
-        # Execute the build.  You can specify a specific target with "--target <NAME>"
-        run: |
-          export CC=clang
-          export CC=clang++
-          cmake --build . --parallel --config RELEASE
-
-      - name: Test
-        working-directory: ${{runner.workspace}}/build
-        shell: bash
-        # Execute tests defined by the CMake configuration.
-        # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
-        run: ctest --parallel 2 --timeout 300 --output-on-failure -C RELEASE
-
-  debug64:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest]
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup ccache
-        uses: hendrikmuhs/ccache-action@v1.2
-
-      - name: Create Build Environment
-        run: cmake -E make_directory ${{runner.workspace}}/build
-
-      - name: Configure CMake
-        shell: bash
-        working-directory: ${{runner.workspace}}/build
-        run: cmake $GITHUB_WORKSPACE -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_BUILD_TYPE=Debug -DFAST_BUILD=OFF -DHIGHSINT64=on
-
-      - name: Build
-        working-directory: ${{runner.workspace}}/build
-        shell: bash
-        # Execute the build.  You can specify a specific target with "--target <NAME>"
-        run: |
-          export CC=clang
-          export CC=clang++
-          cmake --build . --parallel --config Debug
-
-      - name: Test
-        working-directory: ${{runner.workspace}}/build
-        shell: bash
-        # Execute tests defined by the CMake configuration.
-        # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
-        run: ctest --parallel 2 --timeout 300 --output-on-failure -C $BUILD_TYPE
-
-  release64:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest]
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup ccache
-        uses: hendrikmuhs/ccache-action@v1.2
-
-      - name: Create Build Environment
-        run: cmake -E make_directory ${{runner.workspace}}/build
-
-      - name: Configure CMake
-        shell: bash
-        working-directory: ${{runner.workspace}}/build
-        run: cmake $GITHUB_WORKSPACE -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_BUILD_TYPE=RELEASE -DHIGHSINT64=on
-
-      - name: Build
-        working-directory: ${{runner.workspace}}/build
-        shell: bash
-        # Execute the build.  You can specify a specific target with "--target <NAME>"
-        run: |
-          export CC=clang
-          export CC=clang++
-          cmake --build . --parallel --config RELEASE
-
-      - name: Test
-        working-directory: ${{runner.workspace}}/build
-        shell: bash
-        # Execute tests defined by the CMake configuration.
-        # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
-        run: ctest --parallel 2 --timeout 300 --output-on-failure -C RELEASE
+        run: ctest --parallel 2 --timeout 300 --output-on-failure -C ${{ matrix.build-type }}
