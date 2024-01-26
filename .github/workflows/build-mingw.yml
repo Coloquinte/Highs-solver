@@ -43,7 +43,7 @@ jobs:
       - name: Configure CMake
         run: |
           mkdir build && cd build
-          cmake .. -D${{ matrix.fast-build }} -DCMAKE_BUILD_TYPE=${{ matrix.build-type }} -D${{ matrix.int64 }}
+          cmake .. -D${{ matrix.fast-build }} -DCMAKE_BUILD_TYPE=${{ matrix.build-type }} -D${{ matrix.int64 }} -DHIGHS_NO_DEFAULT_THREADS=ON
 
       - name: Build
         # Execute the build.  You can specify a specific target with "--target <NAME>"

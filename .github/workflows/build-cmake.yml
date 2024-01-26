@@ -30,6 +30,7 @@ jobs:
         run: |
           cmake $GITHUB_WORKSPACE \
             -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+            ${{ matrix.os == 'windows-latest' && '-DHIGHS_NO_DEFAULT_THREADS=ON' || '' }} \
             -DCMAKE_BUILD_TYPE=${{ matrix.build-type }} -D${{ matrix.fast-build }} -D${{ matrix.int64 }}
 
       - name: Build
