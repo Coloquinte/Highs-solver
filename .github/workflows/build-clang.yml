@@ -6,11 +6,12 @@ jobs:
   build-clang:
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         os: [ubuntu-latest]
         build-type: [Release, Debug]
-        int64: [ON, OFF]
-        fast-build: [OFF]
+        int64: [HIGHSINT64=ON, HIGHSINT64=OFF]
+        fast-build: [FAST_BUILD=OFF]
 
     steps:
       - uses: actions/checkout@v4
@@ -29,7 +30,7 @@ jobs:
         run: |
           cmake $GITHUB_WORKSPACE \
             -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER_LAUNCHER=ccache \
-            -DCMAKE_BUILD_TYPE=${{ matrix.build-type }} -DFAST_BUILD=${{ matrix.fast-build }} -DHIGHSINT64=${{ matrix.int64 }}
+            -DCMAKE_BUILD_TYPE=${{ matrix.build-type }} -D${{ matrix.fast-build }} -D${{ matrix.int64 }}
 
       - name: Build
         working-directory: ${{runner.workspace}}/build
